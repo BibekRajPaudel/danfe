@@ -30,6 +30,8 @@ const {
   getSingleUpcomingEvent,
   getMatchingUnis,
   getSingleUni,
+  forgotPassword,
+  resetPassword
 } = require('../controllers/userController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -38,6 +40,8 @@ const router = require('express').Router();
 // LOGIN AND REGISTER ROUTES
 router.route('/login').post(authUser);
 router.route('/').post(registerUser);
+router.route("/password/forgot").post(forgotPassword);
+router.route("/password/reset/:token").put(resetPassword);
 
 // get upcoming events
 router.get('/upcomingevents', getUpcomingEvent);

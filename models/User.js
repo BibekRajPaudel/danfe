@@ -4,6 +4,8 @@ const Academic = require('./Academic');
 const ExperienceDetailSchema = require('./ExperienceDetail');
 const TestDetailsSchema = require('./Test');
 const PreferredCountryAndUniSchema = require('./PreferredCountryAndUni');
+const crypto = require("crypto")
+
 
 const UserSchema = new mongoose.Schema(
   {
@@ -40,6 +42,8 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Password is required'],
     },
+    resetPasswordToken: String,
+    resetPasswordExpire:Date,
 
     // Optional Fields
     dateOfBirth: String,
@@ -79,5 +83,23 @@ UserSchema.pre('save', async function (next) {
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
+
+//Getting Reset Password Token
+ // Generating Password Reset Token
+ UserSchema.methods.getResetPasswordToken = function () {
+  // Generating Token
+  const resetToken = crypto.randomBytes(20).toString("hex");
+
+  // Hashing and adding resetPasswordToken to userSchema
+  this.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+
+  return resetToken;
+ }
+
 
 module.exports = mongoose.model('User', UserSchema);
