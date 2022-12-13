@@ -64,7 +64,6 @@ const authUser = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email });
-  console.log(user);
   if (user && (await user.matchPassword(password))) {
     res.json({
       _id: user._id,
@@ -81,14 +80,14 @@ const authUser = asyncHandler(async (req, res, next) => {
 //@description - Forgot Password 
 const forgotPassword = asyncHandler(async (req, res, next) => {
   const user = await User.findOne({email:req.body.email})
-  console.log(user, "user")
 
   if (!user){
-    return next(createCustomError("User not found"), 404)
+    throw createCustomError("User not found", 404 )
   }
 
   //Get reset password token
   const resetToken = user.getResetPasswordToken()
+  
   await user.save({validateBeforeSave:false})
 
   const resetPasswordUrl = `${req.protocol}://${req.get(
@@ -115,7 +114,7 @@ const forgotPassword = asyncHandler(async (req, res, next) => {
 
     await user.save({ validateBeforeSave: false });
 
-    return next(createCustomError(error.message, 401));
+    return next(createCustomError(error.message, 500));
   }
 
   })

@@ -5,6 +5,7 @@ const ExperienceDetailSchema = require('./ExperienceDetail');
 const TestDetailsSchema = require('./Test');
 const PreferredCountryAndUniSchema = require('./PreferredCountryAndUni');
 const crypto = require("crypto")
+const jwt = require('jsonwebtoken');
 
 
 const UserSchema = new mongoose.Schema(
@@ -83,6 +84,14 @@ UserSchema.pre('save', async function (next) {
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
+
+//Getting token from database and authenticating the user
+UserSchema.methods.getJWTToken = function () {
+  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+    expiresIn: '30d',
+  });
+};
+
 
 //Getting Reset Password Token
  // Generating Password Reset Token
