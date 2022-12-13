@@ -1,13 +1,16 @@
 const User = require('../models/User');
 const { createCustomError, CustomAPIError } = require('../error/custom-error');
 const asyncHandler = require('../utils/asyncHandler');
-const generateToken = require('../utils/generateToken');
+const {generateToken, sendToken} = require('../utils/generateToken');
 const CounsellingTime = require('../models/CounsellingTime');
 const UpcomingEvent = require('../models/UpcomingEvent');
 const Contact = require('../models/Contact');
 const catchAsync = require('../utils/asyncHandler');
 const CountryUniversitySchema = require('../models/CountryUniversitySchema');
 const StudentFeedback = require('../models/StudentFeedback');
+const errorHandler = require('../middleware/error-handler');
+const sendEmail = require("../utils/sendEmail")
+const crypto = require("crypto")
 
 // Description - Register a new user
 // Route - POST /api/users
@@ -61,7 +64,6 @@ const authUser = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email });
-  console.log(user);
   if (user && (await user.matchPassword(password))) {
     res.json({
       _id: user._id,
@@ -74,6 +76,90 @@ const authUser = asyncHandler(async (req, res, next) => {
     throw createCustomError('Invalid Email and Password Combination', 401);
   }
 });
+
+//@description - Forgot Password 
+const forgotPassword = asyncHandler(async (req, res, next) => {
+  const user = await User.findOne({email:req.body.email})
+
+  if (!user){
+    throw createCustomError("User not found", 404 )
+  }
+
+  //Get reset password token
+  const resetToken = user.getResetPasswordToken()
+  
+  await user.save({validateBeforeSave:false})
+
+  const resetPasswordUrl = `${req.protocol}://${req.get(
+    "host"
+  )}/password/reset/${resetToken}`;
+
+  const message = `Your password reset token is :- \n\n ${resetPasswordUrl} \n\nIf you have not requested this email then, please ignore it.`;
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: `Password Recovery`,
+      message,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Email sent to ${user.email} successfully`,
+    });
+    
+  } catch (error) {
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save({ validateBeforeSave: false });
+
+    return next(createCustomError(error.message, 500));
+  }
+
+  })
+
+  //Reset Password
+  const resetPassword = asyncHandler(async (req, res, next) => {
+      // creating token hash
+      const resetPasswordToken = crypto
+        .createHash("sha256")
+        .update(req.params.token)
+        .digest("hex");
+    
+      const user = await User.findOne({
+        resetPasswordToken,
+        resetPasswordExpire: { $gt: Date.now() },
+      });
+    
+      if (!user) {
+        return next(
+          createCustomError(
+            "Reset Password Token is invalid or has been expired",
+            400
+          )
+        );
+      }
+    
+      if (req.body.password !== req.body.confirmPassword) {
+        return next(createCustomError("Password does not match", 400));
+      }
+    
+      user.password = req.body.password;
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+    
+      await user.save();
+    
+      sendToken(user, 200, res);
+    });
+
+
+
+
+
+
+
 
 const addCounsellingTime = asyncHandler(async (req, res, next) => {
   const counselling = await CounsellingTime.create({
@@ -824,4 +910,6 @@ module.exports = {
   getSingleUpcomingEvent,
   getMatchingUnis,
   getSingleUni,
+  forgotPassword,
+  resetPassword
 };
