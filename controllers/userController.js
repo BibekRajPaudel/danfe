@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const { createCustomError, CustomAPIError } = require('../error/custom-error');
 const asyncHandler = require('../utils/asyncHandler');
-const {generateToken, sendToken} = require('../utils/generateToken');
+const { generateToken, sendToken } = require('../utils/generateToken');
 const CounsellingTime = require('../models/CounsellingTime');
 const UpcomingEvent = require('../models/UpcomingEvent');
 const Contact = require('../models/Contact');
@@ -79,16 +79,16 @@ const authUser = asyncHandler(async (req, res, next) => {
 
 //@description - Forgot Password 
 const forgotPassword = asyncHandler(async (req, res, next) => {
-  const user = await User.findOne({email:req.body.email})
+  const user = await User.findOne({ email: req.body.email })
 
-  if (!user){
-    throw createCustomError("User not found", 404 )
+  if (!user) {
+    throw createCustomError("User not found", 404)
   }
 
   //Get reset password token
   const resetToken = user.getResetPasswordToken()
-  
-  await user.save({validateBeforeSave:false})
+
+  await user.save({ validateBeforeSave: false })
 
   const resetPasswordUrl = `${req.protocol}://${req.get(
     "host"
@@ -107,7 +107,7 @@ const forgotPassword = asyncHandler(async (req, res, next) => {
       success: true,
       message: `Email sent to ${user.email} successfully`,
     });
-    
+
   } catch (error) {
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
@@ -117,42 +117,42 @@ const forgotPassword = asyncHandler(async (req, res, next) => {
     return next(createCustomError(error.message, 500));
   }
 
-  })
+})
 
-  //Reset Password
-  const resetPassword = asyncHandler(async (req, res, next) => {
-      // creating token hash
-      const resetPasswordToken = crypto
-        .createHash("sha256")
-        .update(req.params.token)
-        .digest("hex");
-    
-      const user = await User.findOne({
-        resetPasswordToken,
-        resetPasswordExpire: { $gt: Date.now() },
-      });
-    
-      if (!user) {
-        return next(
-          createCustomError(
-            "Reset Password Token is invalid or has been expired",
-            400
-          )
-        );
-      }
-    
-      if (req.body.password !== req.body.confirmPassword) {
-        return next(createCustomError("Password does not match", 400));
-      }
-    
-      user.password = req.body.password;
-      user.resetPasswordToken = undefined;
-      user.resetPasswordExpire = undefined;
-    
-      await user.save();
-    
-      sendToken(user, 200, res);
-    });
+//Reset Password
+const resetPassword = asyncHandler(async (req, res, next) => {
+  // creating token hash
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(
+      createCustomError(
+        "Reset Password Token is invalid or has been expired",
+        400
+      )
+    );
+  }
+
+  if (req.body.password !== req.body.confirmPassword) {
+    return next(createCustomError("Password does not match", 400));
+  }
+
+  user.password = req.body.password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+
+  await user.save();
+
+  sendToken(user, 200, res);
+});
 
 
 
@@ -193,7 +193,7 @@ const getUpcomingEvent = asyncHandler(async (req, res, next) => {
 const getSingleUpcomingEvent = asyncHandler(async (req, res, next) => {
   const upcomingEvent = await UpcomingEvent.findById(req.params.id);
 
-  if (upcomingEvents) {
+  if (upcomingEvent) {
     res.status(200).json({
       upcomingEvent,
     });
