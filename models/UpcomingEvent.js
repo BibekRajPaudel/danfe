@@ -16,7 +16,7 @@ const UpcomingEvent = mongoose.Schema({
     type: String,
   },
   date: {
-    type: Date,
+    type: String,
   },
   eventImg: {
     type: String,

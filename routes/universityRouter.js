@@ -19,9 +19,9 @@ const upload = multer({
   fileFilter,
 });
 
-router.post('/', admin, upload.single('brochure'), addUniversity);
+router.post('/', admin, addUniversity);
 
-router.patch('/:id', admin, upload.single('brochure'), editUniversities);
+router.patch('/:id', admin, editUniversities);
 
 router.get('/:id', admin, getUni);
 

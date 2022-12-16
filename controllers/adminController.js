@@ -35,14 +35,9 @@ const getStudentApplications = catchAsync(async (req, res, next) => {
 });
 
 const addUniversity = catchAsync(async (req, res) => {
-  const file = req.file;
-  if (!file) return res.status(400).send('No image in the request');
-
-  console.log(req.body);
-
+  
   const countryuni = await CountryUniversitySchema.create({
     ...req.body,
-    brochureDownloadLink: file.path,
   });
 
   if (countryuni) {

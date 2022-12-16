@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const connectDB = uri => {
-  return mongoose.connect("mongodb+srv://root:DSXpZCac3EyQhEKg@cubeq.xwb8fbj.mongodb.net/?retryWrites=true&w=majority", {
+  return mongoose.connect("mongodb://127.0.0.1:27017/danfe", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
